@@ -376,4 +376,9 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
     {
         return $this->Builds;
     }
+
+    public function getProjectId()
+    {
+        // TODO: Implement getProjectId() method.
+    }
 }
