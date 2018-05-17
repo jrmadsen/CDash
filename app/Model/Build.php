@@ -2832,7 +2832,7 @@ class Build
         return $this->AggregateLabels;
     }
 
-    public function SetActionableType(string $type)
+    public function SetActionableType($type)
     {
         $this->ActionableType = $type;
     }
@@ -2853,7 +2853,7 @@ class Build
         return $this->LabelCollection;
     }
 
-    public function isLabeled(string $label)
+    public function isLabeled($label)
     {
         $labels = array_map(function ($lbl) {
             return $lbl->Text;
