@@ -53,9 +53,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
     {
         parent::__construct($projectid, $scheduleid);
         $this->Builds = [];
-        $this->Site = new Site();
         $this->Append = false;
-        $this->Feed = new Feed();
         $this->BuildLog = '';
         $this->Labels = [];
         $this->SubProjects = [];
@@ -64,16 +62,18 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
     public function startElement($parser, $name, $attributes)
     {
         parent::startElement($parser, $name, $attributes);
+        $factory = $this->getModelFactory();
 
         if ($name == 'SITE') {
+            $this->Site = $factory->create(Site::class);
             $this->Site->Name = $attributes['NAME'];
             if (empty($this->Site->Name)) {
                 $this->Site->Name = '(empty)';
             }
             $this->Site->Insert();
 
-            $siteInformation = new SiteInformation();
-            $this->BuildInformation = new BuildInformation();
+            $siteInformation = $factory->create(SiteInformation::class);
+            $this->BuildInformation = $factory->create(BuildInformation::class);
             $this->BuildName = "";
             $this->BuildStamp = "";
             $this->Generator = "";
@@ -114,7 +114,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $this->SubProjects[$this->SubProjectName] = array();
             }
             if (!array_key_exists($this->SubProjectName, $this->Builds)) {
-                $build = new Build();
+                $build = $factory->create(Build::class);
                 if (!empty($this->PullRequest)) {
                     $build->SetPullRequest($this->PullRequest);
                 }
@@ -128,7 +128,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
         } elseif ($name == 'BUILD') {
             if (empty($this->Builds)) {
                 // No subprojects
-                $build = new Build();
+                $build = $factory->create(Build::class);
                 if (!empty($this->PullRequest)) {
                     $build->SetPullRequest($this->PullRequest);
                 }
@@ -140,15 +140,15 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $this->Builds[''] = $build;
             }
         } elseif ($name == 'WARNING') {
-            $this->Error = new BuildError();
+            $this->Error = $factory->create(BuildError::class);
             $this->Error->Type = 1;
             $this->ErrorSubProjectName = "";
         } elseif ($name == 'ERROR') {
-            $this->Error = new BuildError();
+            $this->Error = $factory->create(BuildError::class);
             $this->Error->Type = 0;
             $this->ErrorSubProjectName = "";
         } elseif ($name == 'FAILURE') {
-            $this->Error = new BuildFailure();
+            $this->Error = $factory->create(BuildFailure::class);
             $this->Error->Type = 0;
             if ($attributes['TYPE'] == 'Error') {
                 $this->Error->Type = 0;
@@ -157,7 +157,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
             }
             $this->ErrorSubProjectName = "";
         } elseif ($name == 'LABEL') {
-            $this->Label = new Label();
+            $this->Label = $factory->create(Label::class);
         }
     }
 
@@ -165,6 +165,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
     {
         $parent = $this->getParent(); // should be before endElement
         parent::endElement($parser, $name);
+        $factory = $this->getModelFactory();
 
         if ($name == 'BUILD') {
             $start_time = gmdate(FMT_DATETIME, $this->StartTimeStamp);
@@ -196,7 +197,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $duration = $this->EndTimeStamp - $this->StartTimeStamp;
                 $build->UpdateBuildDuration($duration, !$all_at_once);
                 if ($all_at_once && !$parent_duration_set) {
-                    $parent_build = new Build();
+                    $parent_build = $factory->create(Build::class);
                     $parent_build->Id = $build->GetParentId();
                     $parent_build->UpdateBuildDuration($duration, false);
                     $parent_duration_set = true;
@@ -205,6 +206,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $build->ComputeDifferences();
 
                 if ($this->config->get('CDASH_ENABLE_FEED')) {
+                    $this->Feed = $factory->create(Feed::class);
                     // Insert the build into the feed
                     $this->Feed->InsertBuild($this->projectid, $build->Id);
                 }
@@ -389,8 +391,12 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
         $factory = $this->getModelFactory();
         /** @var BuildCollection $collection */
         $collection = $factory->create(BuildCollection::class);
-        foreach ($this->Builds as $build) {
-            $collection->add($build);
+        foreach ($this->Builds as $key => $build) {
+            if (is_numeric($key)) {
+                $collection->add($build);
+            } else {
+                $collection->addItem($build, $key);
+            }
         }
         return $collection;
     }
