@@ -18,6 +18,7 @@ require_once 'xml_handlers/abstract_handler.php';
 require_once 'xml_handlers/actionable_build_interface.php';
 
 use CDash\Collection\BuildCollection;
+use CDash\Model\ActionableTypes;
 use CDash\Config;
 use CDash\Model\Build;
 use CDash\Model\BuildError;
@@ -123,6 +124,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $build->SetStamp($this->BuildStamp);
                 $build->Generator = $this->Generator;
                 $build->Information = $this->BuildInformation;
+                $build->SetActionableType(ActionableTypes::BUILD_ERROR);
                 $this->Builds[$this->SubProjectName] = $build;
             }
         } elseif ($name == 'BUILD') {
@@ -137,6 +139,7 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
                 $build->SetStamp($this->BuildStamp);
                 $build->Generator = $this->Generator;
                 $build->Information = $this->BuildInformation;
+                $build->SetActionableType(ActionableTypes::BUILD_ERROR);
                 $this->Builds[''] = $build;
             }
         } elseif ($name == 'WARNING') {
@@ -243,8 +246,10 @@ class BuildHandler extends AbstractHandler implements ActionableBuildInterface
         } elseif ($name == 'LABEL' && $parent == 'LABELS') {
             if (!empty($this->ErrorSubProjectName)) {
                 $this->SubProjectName = $this->ErrorSubProjectName;
-            } elseif (isset($this->Error)) {
-                $this->Error->AddLabel($this->Label);
+                if (isset($this->Error)) {
+                    $this->Label->SetText($this->SubProjectName);
+                    $this->Error->AddLabel($this->Label);
+                }
             } else {
                 $this->Labels[] = $this->Label;
             }
