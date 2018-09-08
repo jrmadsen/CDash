@@ -2849,7 +2849,8 @@ class Build
         return $this->CommitAuthors;
     }
 
-    public function HasAuthor($email) {
+    public function HasAuthor($email)
+    {
         $authors = $this->GetCommitAuthors();
         return in_array($email, $authors);
     }
