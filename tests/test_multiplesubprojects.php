@@ -132,12 +132,7 @@ class MultipleSubprojectsTestCase extends KWWebTestCase
 
     private function restoreState()
     {
-        // Delete the builds
-        if ($this->buildIds) {
-            foreach ($this->buildIds as $buildid) {
-                remove_build($buildid);
-            }
-        }
+        remove_build($this->buildIds);
 
         $this->restoreEmailPreference();
 
