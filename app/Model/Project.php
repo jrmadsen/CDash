@@ -1708,6 +1708,7 @@ class Project
             $preferences->setPreferencesFromEmailTypeProperty($row->emailtype);
             $preferences->setPreferencesFromEmailSuccessProperty($row->emailsuccess);
             $preferences->setPreferenceFromMissingSiteProperty($row->emailmissingsites);
+            $preferences->setEmailRedundantMessages($this->EmailRedundantFailures);
 
             /** @var Subscriber $subscriber */
             $subscriber = $service->make(Subscriber::class, ['preferences' => $preferences]);
