@@ -3,6 +3,8 @@
 // After including cdash_test_case.php, subsequent require_once calls are
 // relative to the top of the CDash source tree
 //
+use CDash\Config;
+
 require_once dirname(__FILE__) . '/cdash_test_case.php';
 require_once 'include/pdo.php';
 
@@ -100,10 +102,25 @@ class EmailTestCase extends KWWebTestCase
             return;
         }
 
-        if (!$this->compareLog($this->logfilename, $rep . '/cdash_1.log')) {
-            return;
+        $config = Config::getInstance();
+
+        // illuminate/support/helpers/str_contains
+        $expected = [
+            'cdash.DEBUG: user1@kw',
+            'cdash.DEBUG: PASSED (w=6): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'Congratulations. A submission to CDash for the project EmailProjectExample has fixed warnings',
+            "{$config->getBaseUrl()}/buildSummary.php?buildid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:04',
+            'Type: Nightly',
+            'Warnings fixed: 6',
+            '-CDash on cdash.dev'
+        ];
+        if ($this->assertLogContains($expected, 15)) {
+            $this->pass('Passed');
         }
-        $this->pass('Passed');
     }
 
     public function testSubmissionEmailTest()
@@ -115,11 +132,25 @@ class EmailTestCase extends KWWebTestCase
         if (!$this->submission('EmailProjectExample', $file)) {
             return;
         }
-        if (!$this->compareLog($this->logfilename, "$rep/cdash_2.log")) {
-            return;
-        }
+        $config = Config::getInstance();
+        // illuminate/support/helpers/str_contains
+        $expected = [
+            'cdash.DEBUG: user1@kw',
+            'cdash.DEBUG: PASSED (t=2): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'Congratulations. A submission to CDash for the project EmailProjectExample has fixed failing tests',
+            "{$config->getBaseUrl()}/buildSummary.php?buildid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:04',
+            'Type: Nightly',
+            'Test failures fixed: 2',
+            '-CDash on cdash.dev'
+        ];
 
-        $this->pass('Passed');
+        if ($this->assertLogContains($expected, 15)) {
+            $this->pass('Passed');
+        }
     }
 
     public function testSubmissionEmailDynamicAnalysis()
@@ -131,10 +162,48 @@ class EmailTestCase extends KWWebTestCase
         if (!$this->submission('EmailProjectExample', $file)) {
             return;
         }
-        if (!$this->compareLog($this->logfilename, "$rep/cdash_3.log")) {
-            return;
+        $config = Config::getInstance();
+        $url = $config->getBaseUrl();
+        $expected = [
+            'simpletest@localhost',
+            'FAILED (d=10): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'A submission to CDash for the project EmailProjectExample has dynamic analysis tests failing or not run',
+            "{$url}/viewProject?projectid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:04',
+            'Type: Nightly',
+            'Total Dynamic analysis tests failing or not run: 10',
+            '*Dynamic analysis tests failing or not run* (first 5 included)',
+            "itkVectorFiniteDifferenceFunctionTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSegmentationLevelSetFunctionTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorLevelSetFunctionTest2 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSparseFieldLevelSetImageFilterTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSparseFieldLevelSetImageFilterTest2 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "-CDash on",
+            'user1@kw',
+            'FAILED (d=10): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'A submission to CDash for the project EmailProjectExample has dynamic analysis tests failing or not run',
+            "{$url}/viewProject?projectid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:04',
+            'Type: Nightly',
+            'Total Dynamic analysis tests failing or not run: 10',
+            '*Dynamic analysis tests failing or not run* (first 5 included)',
+            "itkVectorFiniteDifferenceFunctionTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSegmentationLevelSetFunctionTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorLevelSetFunctionTest2 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSparseFieldLevelSetImageFilterTest1 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "itkVectorSparseFieldLevelSetImageFilterTest2 ({$url}/viewDynamicAnalysisFile.php?id=",
+            "-CDash on",
+        ];
+
+        if ($this->assertLogContains($expected, 45)) {
+            $this->pass('Passed');
         }
-        $this->pass('Passed');
     }
 
     public function testEmailSentToGitCommitter()
@@ -151,10 +220,74 @@ class EmailTestCase extends KWWebTestCase
             //return;
         }
 
-        if (!$this->compareLog($this->logfilename, "$rep/cdash_committeremail.log")) {
-            $this->fail('Log did not match cdash_committeremail.log');
-            return;
+        $config = Config::getInstance();
+        $url = $config->getBaseUrl();
+        $expected = [
+            'simpletest@localhost',
+            'FAILED (t=4): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'A submission to CDash for the project EmailProjectExample has failing tests.',
+            "Details on the submission can be found at {$url}/viewProject?projectid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:05',
+            'Type: Nightly',
+            'Total Failing Tests: 4',
+            '*Failing Tests*',
+            "curl | Completed | ({$url}/testDetails.php?test=",
+            "DashboardSendTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            "StringActionsTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            "MathActionsTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            '-CDash on',
+            'user1@kw',
+            'FAILED (t=4): EmailProjectExample - Win32-MSVC2009 - Nightly',
+            'A submission to CDash for the project EmailProjectExample has failing tests.',
+            "Details on the submission can be found at {$url}/viewProject?projectid=",
+            'Project: EmailProjectExample',
+            'Site: Dash20.kitware',
+            'Build Name: Win32-MSVC2009',
+            'Build Time: 2009-02-23 10:02:05',
+            'Type: Nightly',
+            'Total Failing Tests: 4',
+            '*Failing Tests*',
+            "curl | Completed | ({$url}/testDetails.php?test=",
+            "DashboardSendTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            "StringActionsTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            "MathActionsTest | Completed (OTHER_FAULT) | ({$url}/testDetails.php?test=",
+            '-CDash on',
+        ];
+
+        if ($this->assertLogContains($expected, 43)) {
+            $this->pass('Passed');
         }
-        $this->pass('Passed');
+    }
+
+    private function assertLogContains($expected, $lineCount)
+    {
+        $count = 0;
+        $log = file_get_contents($this->logfilename);
+        $lines = explode(PHP_EOL, $log);
+        $passed = true;
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line && !str_contains($line, $expected[$count])) {
+                $message = "Unexpected output in logfile:\n"
+                    . "Expected: {$expected[$count]}\n"
+                    . "   Found: {$line}\n";
+                $this->fail($message);
+                $passed = false;
+                break;
+            }
+            $count += $line ? 1 : 0;
+        }
+
+        $count = count($lines);
+        if ($count !== $lineCount) {
+            $message = "\nExpected {$lineCount} lines of log output, received {$count}";
+            $this->fail($message);
+            $passed = false;
+        }
+
+        return $passed;
     }
 }
