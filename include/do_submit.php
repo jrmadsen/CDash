@@ -155,18 +155,7 @@ function do_submit($fileHandleOrSubmissionId, $projectid, $buildid = null,
         return false;
     }
 
-    // Send the emails if necessary
-    if ($handler instanceof UpdateHandler) {
-        send_update_email($handler, $projectid);
-        sendemail($handler, $projectid);
-    }
-    if ($handler instanceof TestingHandler ||
-        $handler instanceof BuildHandler ||
-        $handler instanceof ConfigureHandler ||
-        $handler instanceof DynamicAnalysisHandler
-    ) {
-        sendemail($handler, $projectid);
-    }
+    sendemail($handler, $projectid);
 
     if ($config->get('CDASH_ENABLE_FEED')) {
         // Create the RSS feed
