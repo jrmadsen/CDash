@@ -534,6 +534,17 @@ if [ "$local_service_needed" '=' '1' ] ; then
     local_service_teardown
 fi
 
+# needed by cron jobs
+if [ ! -f /run/secrets/cdash-mysql-passwd ]; then
+    DB_PASSWD=$(echo $CDASH_CONFIG | sed 's/;/\n/g' | grep CDASH_DB_PASS  | awk '{print $NF}' | sed "s/'//g")
+    if [ -n "${DB_PASSWD}" ]; then
+        echo $DB_PASSWD > /run/secrets/cdash-mysql-passwd
+    fi
+fi
+
+# start cron
+cron
+
 if [ "$do_serve" '!=' '1' ] ; then
     exit
 fi

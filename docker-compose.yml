@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   cdash:
-    image: "kitware/cdash"
+    image: "jrmadsen/cdash:v2.6.2"
     build: .
     depends_on:
       - mysql
@@ -12,12 +12,47 @@ services:
     environment:
       CDASH_ROOT_ADMIN_PASS: secret
 
+      CDASH_CONFIG: |
+        $$CDASH_DB_LOGIN = 'cdash';
+        $$CDASH_DB_PASS = 'cdash-nersc-2017';
+        $$CDASH_DB_HOST = 'mysql';
+        $$CDASH_USER_CREATE_PROJECTS = true;
+        $$CDASH_REGISTRATION_EMAIL_VERIFY = false;
+        $$CDASH_GIT_COMMAND = 'git';
+        $$CDASH_DAILY_UPDATES = true;
+        $$CDASH_MAININDEX_TITLE = 'NERSC';
+        $$CDASH_BACKUP_TIMEFRAME = '336';
+        $$CDASH_AUTOREMOVE_BUILDS = '0';
+        $$CDASH_ACTIVE_PROJECT_DAYS = '64';
+        $$CDASH_SUBMISSION_PROCESSING_TIME_LIMIT = '600';
+        $$CDASH_SUBMISSION_PROCESSING_MAX_ATTEMPTS = '2';
+        $$CDASH_MAX_UPLOAD_QUOTA = '10000';
+        $$CDASH_LARGE_TEXT_LIMIT = '0';
+        $$CDASH_BASE_URL = 'cdash.cdash.development.svc.spin.nersc.org';
+        $$CDASH_SERVER_NAME = 'cdash.cdash.development.svc.spin.nersc.org';
+        $$CDASH_USE_HTTPS = '1';
+        $$CDASH_ASYNCHRONOUS_SUBMISSION = false;
+        $$CDASH_ASYNC_EXPIRATION_TIME = 0;
+        $$CDASH_ASYNC_WORKERS = 4;
+        $$CDASH_EMAILADMIN = 'nersc.cdash@outlook.com';
+        $$CDASH_EMAIL_FROM = 'nersc.cdash@outlook.com';
+        $$CDASH_EMAIL_REPLY = 'noreply@cdash.org';
+        $$CDASH_EMAIL_SMTP_LOGIN = 'nersc.cdash@outlook.com';
+        $$CDASH_EMAIL_SMTP_PASS = 'cdash-nersc-2017';
+        $$CDASH_LOG_LEVEL = LOG_INFO;
+        $$CDASH_USE_PERSISTENT_MYSQL_CONNECTION = true;
+        $$CDASH_MAX_QUERY_RETRIES = 5;
+        $$CDASH_ENABLE_FEED = 1;
+
+      CDASH_ROOT_ADMIN_EMAIL: "jrmadsen@lbl.gov"
+      CDASH_ROOT_ADMIN_PASS: "cdash-nersc-2017"
+
       CDASH_STATIC_USERS: |
         USER jdoe@acme.com jdoe_secret
           John Doe "ACME Inc."
 
-        ADMIN admin@example.org admin_secret
-          Admin User "Example Foundation"
+        ADMIN jrmadsen@lbl.gov cdash-nersc-2017
+          Jonathan Madsen "NERSC"
 
         donotreply@example.org oldsecret newsecret
 
@@ -27,9 +62,9 @@ services:
         DELETE remove.this.user@example.org delete_secret
 
   mysql:
-    image: "mysql/mysql-server:5.5"
+    image: "mysql:5.7"
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-      MYSQL_ROOT_PASSWORD: ''
-      MYSQL_DATABASE: 'cdash'
-      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: "cdash"
+      MYSQL_ROOT_PASSWORD: "cdash-nersc-2017"
+      MYSQL_PASSWORD: "cdash-nersc-2017"
+      MYSQL_DATABASE: "cdash"
